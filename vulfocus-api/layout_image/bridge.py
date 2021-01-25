@@ -12,8 +12,8 @@ from compose.config.config import get_default_config_files
 from compose.config.environment import Environment
 
 from compose.cli.docker_client import docker_client
-from compose.const import API_VERSIONS, COMPOSEFILE_V3_0
-
+from compose.const import API_VERSIONS, ComposeVersion
+COMPOSEFILE_V3_0 = ComposeVersion('3.0')
 
 logging.info(get_version_info('full'))
 
@@ -84,7 +84,7 @@ def info():
     docker info
     """
     docker_info = client().info()
-    return dict(compose=compose_version,info=docker_info['ServerVersion'], name=docker_info['Name'])
+    return dict(compose=compose_version, info=docker_info['ServerVersion'], name=docker_info['Name'])
 
 
 def client():

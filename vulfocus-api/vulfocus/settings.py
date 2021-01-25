@@ -19,19 +19,18 @@ from django.core.management import utils
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# TODO 2021-1-25 load from `config.yaml`
+from .conf import config
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-try:
-    SECRET_KEY = os.environ['SECRET_KEY']
-except:
-    SECRET_KEY = utils.get_random_secret_key()
-    os.environ['SECRET_KEY'] = SECRET_KEY
+SECRET_KEY = config.SECRET_KEY
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config.DEBUG
 
 ALLOWED_HOSTS = ["*"]
 
@@ -50,9 +49,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'rest_framework',
     'user',
-    'corsheaders',
+    # 'corsheaders',
     'dockerapi',
     'network',
     'tasks',
@@ -60,11 +60,11 @@ INSTALLED_APPS = [
 ]
 
 # redis host
-REDIS_HOST = "127.0.0.1"
+REDIS_HOST = config.REDIS_HOST
 # redis port
-REDIS_PORT = 6379
+REDIS_PORT = config.REDIS_PORT
 # redis pass
-REDIS_PASS = ""
+REDIS_PASS = config.REDIS_PASSWORD
 if REDIS_PASS:
     CELERY_BROKER_URL = "redis://:%s@%s:%s/0" % (REDIS_PASS, str(REDIS_HOST), str(REDIS_PORT))
     REDIS_POOL = redis.ConnectionPool(host=REDIS_HOST, port=int(REDIS_PORT), password=REDIS_PASS, decode_responses=True, db=1)
@@ -81,7 +81,7 @@ CELERY_TASK_SERIALIZER = 'json'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
+    # 'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -89,10 +89,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ORIGIN_WHITELIST = [
-    "http://localhost:9527",
-]
-CORS_ORIGIN_ALLOW_ALL = True
+# CORS_ORIGIN_WHITELIST = [
+#     "http://localhost:9527",
+# ]
+# CORS_ORIGIN_ALLOW_ALL = True
 
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
@@ -123,8 +123,7 @@ ROOT_URLCONF = 'vulfocus.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')]
-        ,
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -143,13 +142,60 @@ WSGI_APPLICATION = 'vulfocus.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+# Session 和y页面的缓存存储, 由于不是ORM，所以很多用户上
+
+SESSION_COOKIE_DOMAIN = config.SESSION_COOKIE_DOMAIN
+CSRF_COOKIE_DOMAIN = config.CSRF_COOKIE_DOMAIN
+SESSION_COOKIE_AGE = config.SESSION_COOKIE_AGE
+SESSION_EXPIRE_AT_BROWSER_CLOSE = config.SESSION_EXPIRE_AT_BROWSER_CLOSE
+SESSION_ENGINE = 'redis_sessions.session'
+SESSION_REDIS = {
+    'host': config.REDIS_HOST,
+    'port': config.REDIS_PORT,
+    'password': config.REDIS_PASSWORD,
+    'db': config.REDIS_DB_SESSION,
+    'prefix': 'auth_session',
+    'socket_timeout': 1,
+    'retry_on_timeout': False
 }
 
+MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
+# Database
+# https://docs.djangoproject.com/en/1.10/ref/settings/#databases
+
+DB_OPTIONS = {}
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.{}'.format(config.DB_ENGINE.lower()),
+        'NAME': config.DB_NAME,
+        'HOST': config.DB_HOST,
+        'PORT': config.DB_PORT,
+        'USER': config.DB_USER,
+        'PASSWORD': config.DB_PASSWORD,
+        'ATOMIC_REQUESTS': True,
+        'OPTIONS': DB_OPTIONS
+    },
+    # 'mongo': {
+    #     'ENGINE': None,
+    # }
+}
+
+DB_CA_PATH = os.path.join(BASE_DIR, 'data', 'ca.pem')
+if config.DB_ENGINE.lower() == 'mysql':
+    # DB_OPTIONS['init_command'] = "SET sql_mode='STRICT_TRANS_TABLES'"
+    DB_OPTIONS['sql_mode'] = "traditional"
+    if os.path.isfile(DB_CA_PATH):
+        DB_OPTIONS['ssl'] = {'ca': DB_CA_PATH}
+elif config.DB_ENGINE.lower() == 'sqlite3':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
+    }
+
+# bug MySQL does not allow unique CharFields to have a max_length > 255
+SILENCED_SYSTEM_CHECKS = ['mysql.E001']
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
@@ -187,12 +233,8 @@ USE_TZ = False
 # 默认启动容器最长时间为 60s，可根据实际情况调整
 DOCKER_CONTAINER_TIME = 60
 
-try:
-    # DOCKER_URL tcp://127.0.0.1:2375 or unix://var/run/docker.sock
-    # DOCKER_URL = "tcp://192.168.87.136:2375"
-    DOCKER_URL = os.environ['DOCKER_URL']
-except:
-    DOCKER_URL = "unix://var/run/docker.sock"
+DOCKER_HOST = config.DOCKER_HOST
+DOCKER_URL = f"tcp://{DOCKER_HOST}:2375"
 
 if DOCKER_URL.startswith("unix:"):
     client = docker.DockerClient(base_url=DOCKER_URL)
@@ -211,12 +253,10 @@ except Exception as e:
 
 
 # 靶场绑定 IP，提供用户访问靶场与 Docker 服务IP保持一致。
-VUL_IP = ""
 try:
-    if os.environ['VUL_IP']:
-        VUL_IP = os.environ['VUL_IP']
-except Exception as e:
-    pass
+    VUL_IP = config.VUL_IP
+except:
+    VUL_IP = config.DOCKER_HOST
 
 DOCKER_COMPOSE = os.path.join(BASE_DIR, "docker-compose")
 

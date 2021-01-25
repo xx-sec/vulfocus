@@ -1,5 +1,5 @@
 * [Vulfocus]()
-* [安装](INSTALL.md)
+* [安装](docs/INSTALL.md)
 
 * Writeup
 
