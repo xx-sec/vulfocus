@@ -165,6 +165,7 @@ celery -A vulfocus worker -l info -E
 后端启动：
 ```
 celery multi start worker -A vulfocus -l info --logfile=celery.log
+
 ```
 
 #### 安装uwsgi

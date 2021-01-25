@@ -4,30 +4,30 @@ services:
    web:
       container_name: gunicorn
       restart: always
-      image: 'registry.cn-beijing.aliyuncs.com/topadp/adip-dev'
+      image: 'registry.cn-beijing.aliyuncs.com/vusfocus/vulfocus'
       ports:
         - 8077:8077
       volumes:
         - /etc/localtime:/etc/localtime:ro
-        - .:/usr/src/app
+        - ./vulfocus-api:/usr/src/app
         - /usr/bin/docker:/usr/bin/docker
         - /var/run/docker.sock:/var/run/docker.sock
         - /nfs_data:/nfs_data
-      command: /usr/local/bin/gunicorn web.wsgi:application -w 2 -b :8077
+      command: /usr/local/bin/gunicorn vulfocus.wsgi:application -w 2 -b :8077
       networks:
           customize_net:
             ipv4_address: 192.168.77.110
    celery:
       container_name: celery
       restart: always
-      image: 'registry.cn-beijing.aliyuncs.com/topadp/adip-dev'
+      image: 'registry.cn-beijing.aliyuncs.com/vusfocus/vulfocus'
       volumes:
         - /etc/localtime:/etc/localtime:ro
-        - .:/usr/src/app
+        - ./vulfocus-api:/usr/src/app
         - /usr/bin/docker:/usr/bin/docker
         - /var/run/docker.sock:/var/run/docker.sock
         - /nfs_data:/nfs_data
-      command: /usr/local/bin/celery worker -A vulfocus -l INFO --autoscale 30,5 --logfile ./logs/celery.log
+      command: /usr/local/bin/celery worker -A vulfocus -l INFO --autoscale 30,5 --logfile ./celery.log
       networks:
           customize_net:
             ipv4_address: 192.168.77.111
@@ -37,10 +37,10 @@ services:
      restart: always
      ports:
        - 5555:5555
-     image: 'registry.cn-beijing.aliyuncs.com/topadp/adip-dev'
+     image: 'registry.cn-beijing.aliyuncs.com/vusfocus/vulfocus'
      volumes:
         - /etc/localtime:/etc/localtime:ro
-        - .:/usr/src/app
+        - ./vulfocus-api:/usr/src/app
         - /usr/bin/docker:/usr/bin/docker
         - /var/run/docker.sock:/var/run/docker.sock
         - /nfs_data:/nfs_data
@@ -92,11 +92,11 @@ services:
        - "80:80"
      volumes:
        - /etc/localtime:/etc/localtime:ro
-       - ./collect_static:/home/collect_static
+       - ./vulfocus-api/collect_static:/home/collect_static
        - ./dist:/var/www/html
-       - ./private/containers/docs/nginx/nginx.conf:/etc/nginx/nginx.conf
-       - ./private/containers/docs/nginx/waf-help.conf:/etc/nginx/waf-help.conf
-       - ./private/containers/docs/nginx/vhosts:/etc/nginx/vhosts
+       - ./private/containers/nginx/nginx.conf:/etc/nginx/nginx.conf
+       - ./private/containers/nginx/waf-help.conf:/etc/nginx/waf-help.conf
+       - ./private/containers/nginx/vhosts:/etc/nginx/vhosts
      networks:
        customize_net:
          ipv4_address: 192.168.77.189
