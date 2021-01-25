@@ -4,7 +4,7 @@ services:
    web:
       container_name: gunicorn
       restart: always
-      image: 'registry.cn-beijing.aliyuncs.com/vusfocus/vulfocus'
+      image: 'registry.cn-beijing.aliyuncs.com/redaus/xdp'
       ports:
         - 8077:8077
       volumes:
@@ -20,7 +20,7 @@ services:
    celery:
       container_name: celery
       restart: always
-      image: 'registry.cn-beijing.aliyuncs.com/vusfocus/vulfocus'
+      image: 'registry.cn-beijing.aliyuncs.com/redaus/xdp'
       volumes:
         - /etc/localtime:/etc/localtime:ro
         - ./vulfocus-api:/usr/src/app
@@ -37,7 +37,7 @@ services:
      restart: always
      ports:
        - 5555:5555
-     image: 'registry.cn-beijing.aliyuncs.com/vusfocus/vulfocus'
+     image: 'registry.cn-beijing.aliyuncs.com/redaus/xdp'
      volumes:
         - /etc/localtime:/etc/localtime:ro
         - ./vulfocus-api:/usr/src/app
