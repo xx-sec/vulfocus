@@ -10,7 +10,8 @@ requests==2.22.0
 requests_toolbelt
 requests[socks]
 xmltodict==0.12.0
-Ipy==1.1
+python-libnmap==0.7.0
+Ipy
 address==0.1.1
 shortuuid
 dateutils
@@ -25,7 +26,7 @@ redis==3.5.3
 django-redis==4.11.0
 django-redis-cache==2.1.1
 django-redis-sessions==0.6.1
-redis-lock==0.2.0
+redis-lock-0.2.0
 
 # Django-celery
 celery==4.4.2
@@ -45,12 +46,4 @@ django-import-export==2.5.0
 ## markdown
 markdown==3.3.3
 
-## jwt
-PyJWT==1.7.1
-djangorestframework-jwt==1.11.0
-
-## docker-help
-docker-compose==1.28.0
-#docker==4.4.1
-#dockerpty==0.4.1
-#docker-pycreds==0.4.0
+goto-statement==1.2
